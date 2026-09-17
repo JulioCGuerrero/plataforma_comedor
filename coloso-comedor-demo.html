@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coloso Comedor — Demo</title>
+<style>
+  :root{
+    --bg-sidebar:#171219;
+    --bg-sidebar-2:#221B24;
+    --gold:#D99A2B;
+    --cream:#FBF8F3;
+    --cream-2:#F4EEE6;
+    --border:#E6DED2;
+    --ink:#27232A;
+    --ink-soft:#6B6570;
+    --red:#B84040;
+    --red-bg:#FCECEC;
+    --green:#2E7D4F;
+    --green-bg:#E5F3EA;
+    --blue:#2B5F94;
+    --blue-bg:#E4EEF9;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#EFE9DD;color:var(--ink);}
+  button{font-family:inherit;cursor:pointer;}
+  table{width:100%;border-collapse:collapse;}
+
+  /* ---- top switch ---- */
+  .top-switch{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;background:var(--bg-sidebar);
+  }
+  .top-switch .brand{color:var(--gold);font-weight:800;letter-spacing:1px;font-size:15px;}
+  .top-switch .brand span{color:#fff;font-weight:700;letter-spacing:2px;font-size:11px;margin-left:8px;opacity:.8;}
+  .switch-group{display:flex;gap:6px;background:#221B24;padding:4px;border-radius:10px;}
+  .switch-group button{
+    border:none;background:transparent;color:#B7AFC0;font-size:13px;font-weight:700;
+    padding:8px 16px;border-radius:8px;
+  }
+  .switch-group button.active{background:var(--gold);color:#fff;}
+
+  .view{display:none;}
+  .view.active{display:flex;}
+  #view-app.view.active{padding:40px 24px;justify-content:center;}
+  #view-panel.view.active{padding:0;}
+
+  /* ================= PANEL WEB ================= */
+  .panel{width:100%;min-height:calc(100vh - 68px);display:flex;background:var(--cream);}
+  .sidebar{width:230px;flex-shrink:0;background:var(--bg-sidebar);display:flex;flex-direction:column;padding:24px 18px;}
+  .sidebar .logo{display:flex;flex-direction:column;gap:2px;padding:0 6px 24px 6px;}
+  .sidebar .logo .l1{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:.5px;}
+  .sidebar .logo .l2{font-size:11px;font-weight:700;color:var(--cream);letter-spacing:2px;}
+  .navbtn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:none;
+    background:transparent;color:#C9C2D1;font-size:14px;font-weight:600;text-align:left;width:100%;margin-bottom:4px;}
+  .navbtn.active{background:rgba(217,154,43,.18);color:#F3D9A6;}
+  .navbtn svg{flex-shrink:0;}
+  .shift-card{margin-top:auto;padding:14px 12px;background:var(--bg-sidebar-2);border-radius:12px;}
+  .shift-card .tag{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+  .shift-card .name{font-size:13px;color:var(--cream);font-weight:700;}
+  .shift-card .hrs{font-size:11px;color:#B7AFC0;margin-top:2px;}
+
+  .main{flex-grow:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 32px;border-bottom:1px solid var(--border);}
+  .topbar .title{font-size:19px;font-weight:800;}
+  .topbar .sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+  .topbar-actions{display:flex;align-items:center;gap:14px;position:relative;}
+  .bell-btn{position:relative;width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+  .bell-count{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 3px;border-radius:999px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .bell-dropdown{display:none;position:absolute;top:46px;right:0;width:340px;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.16);z-index:30;overflow:hidden;}
+  .bell-dropdown.open{display:block;}
+  .bell-dropdown .head{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;}
+  .alert-item{padding:12px 16px;border-bottom:1px solid var(--cream-2);display:flex;flex-direction:column;gap:6px;}
+  .alert-item:last-child{border-bottom:none;}
+  .alert-item.resolved{opacity:.5;}
+  .alert-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .alert-cat{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+  .alert-time{font-size:11px;color:var(--ink-soft);}
+  .alert-msg{font-size:12px;line-height:1.4;}
+  .alert-resolve{align-self:flex-start;background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--ink);}
+  .checkin-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;max-width:420px;}
+  .checkin-status{font-size:13px;color:var(--ink-soft);}
+  .checkin-btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:13px 28px;font-size:14px;font-weight:700;}
+  .checkin-btn.out{background:var(--ink);}
+  .checkin-ok{font-size:13px;color:var(--green);font-weight:700;}
+  .checkin-photo{width:72px;height:72px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;}
+  .checkin-photo.captured{border:2px solid var(--gold);background:var(--gold);}
+  .checkin-location{font-size:11px;color:var(--ink-soft);min-height:14px;}
+  .checkin-location.ok{color:var(--green);font-weight:700;}
+
+  .compose-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;max-width:520px;}
+  .compose-row{display:flex;gap:10px;}
+  .compose-textarea{width:100%;min-height:80px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-family:inherit;resize:none;}
+  .compose-select{border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;background:#fff;}
+  .compose-send{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:700;align-self:flex-start;}
+  .compose-send:disabled{background:#ECECEC;color:#A39CAA;}
+  .msg-item{padding:12px 16px;border-bottom:1px solid var(--cream-2);display:flex;flex-direction:column;gap:5px;}
+  .msg-item:last-child{border-bottom:none;}
+  .msg-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .msg-priority{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+  .msg-time{font-size:11px;color:var(--ink-soft);}
+  .msg-text{font-size:13px;line-height:1.4;}
+
+  .content{padding:28px 32px;overflow:auto;}
+  .section{display:none;flex-direction:column;gap:22px;}
+  .section.active{display:flex;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;}
+  .kpi-label{font-size:11px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px;}
+  .kpi-value{font-size:28px;font-weight:800;margin-top:6px;}
+
+  .cols{display:flex;gap:22px;align-items:flex-start;}
+  .table-card{flex-grow:1;min-width:0;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .filters{display:flex;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .filter-btn{padding:7px 13px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border);background:#fff;color:var(--ink);}
+  .filter-btn.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+  th{padding:9px 18px;font-size:11px;color:var(--ink-soft);font-weight:700;text-align:left;}
+  td{padding:11px 18px;font-size:13px;border-top:1px solid var(--border);}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;}
+
+  .side-col{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:18px;}
+  .quick-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--cream-2);font-size:13px;}
+  .quick-row:first-of-type{border-top:none;}
+  .rule-card{background:var(--bg-sidebar);border-radius:14px;padding:18px;color:#fff;}
+  .rule-card .tag{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:8px;}
+  .rule-card p{font-size:13px;line-height:1.5;color:#E9E4EE;margin:0;}
+
+  .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;}
+  .dish-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;}
+  .dish-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .dish-name{font-size:15px;font-weight:700;}
+  .dish-cat{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .tag-pill{font-size:10px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;}
+  .bar-row{display:flex;align-items:center;gap:10px;}
+  .bar-track{flex-grow:1;height:8px;background:var(--cream-2);border-radius:6px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--gold);}
+
+  .stat3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;}
+  .area-row{margin-bottom:12px;}
+  .area-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+  .export-row{display:flex;gap:10px;}
+  .btn-dark{background:var(--ink);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:12px;font-weight:700;}
+  .btn-outline{background:#fff;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:11px 18px;font-size:12px;font-weight:700;}
+
+  /* ================= APP MOVIL ================= */
+  .phone{width:360px;height:760px;background:var(--cream);border-radius:36px;border:10px solid #171219;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;display:flex;flex-direction:column;}
+  .app-header{padding:20px 18px 12px 18px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .app-header .eyebrow{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:2px;}
+  .app-header .title{font-size:18px;font-weight:800;margin-top:4px;}
+  .bell{width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+  .app-body{flex-grow:1;overflow:auto;padding:2px 18px 16px 18px;}
+  .app-screen{display:none;flex-direction:column;gap:14px;}
+  .app-screen.active{display:flex;}
+  .search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;color:#8A8390;}
+  .price-note{background:#F4EEE6;border-radius:12px;padding:10px 12px;font-size:11px;color:var(--ink-soft);}
+  .price-note strong{color:var(--ink);}
+  .app-dish{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;gap:10px;}
+  .app-dish .icon-box{width:48px;height:48px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .app-dish .info{flex-grow:1;min-width:0;}
+  .app-dish .row-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+  .app-dish .name{font-size:14px;font-weight:700;}
+  .app-dish .desc{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .app-dish .order-btn{margin-top:7px;padding:7px 14px;border-radius:8px;border:none;font-size:11px;font-weight:700;}
+
+  .order-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .order-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+  .order-top .status{font-weight:700;color:var(--gold);}
+  .order-dish{font-size:16px;font-weight:800;margin-top:4px;}
+  .steps{display:flex;align-items:flex-start;margin-top:16px;}
+  .step{flex-grow:1;display:flex;flex-direction:column;align-items:center;}
+  .step-line-row{display:flex;align-items:center;width:100%;}
+  .step-line{flex-grow:1;height:2px;}
+  .step-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .step-label{font-size:9px;margin-top:5px;text-align:center;}
+
+  .qr-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .qr-grid{display:grid;grid-template-columns:repeat(12,11px);grid-template-rows:repeat(12,11px);}
+  .qr-cap{font-size:11px;color:var(--ink-soft);text-align:center;}
+
+  .rules-dark{background:#221B24;border-radius:14px;padding:14px 16px;color:#fff;}
+  .rules-dark .tag{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:5px;}
+  .rules-dark p{font-size:12px;line-height:1.5;color:#E9E4EE;margin:0;}
+  .cancel-btn{background:#fff;border:1px solid var(--border);border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:var(--red);}
+
+  .avatar-big{width:64px;height:64px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;margin:0 auto;}
+  .profile-list{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .profile-list .row{padding:14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;}
+  .profile-list .row:last-child{border-bottom:none;}
+  .logout-btn{background:#FCECEC;border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:700;color:var(--red);}
+
+  .app-nav{display:flex;border-top:1px solid var(--border);background:#fff;}
+  .navtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 12px 0;border:none;background:transparent;color:#A39CAA;}
+  .navtab.active{color:var(--gold);}
+  .navtab .dotwrap{position:relative;}
+  .navtab .badge-dot{position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--gold);border:1.5px solid #fff;}
+  .navtab .badge-num{position:absolute;top:-6px;right:-8px;min-width:14px;height:14px;padding:0 3px;border-radius:999px;background:var(--red);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;}
+  .navtab span{font-size:10px;font-weight:700;}
+
+  .app-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .role-switch{display:flex;gap:6px;background:#221B24;padding:4px;border-radius:10px;}
+  .role-switch button{border:none;background:transparent;color:#B7AFC0;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;}
+  .role-switch button.active{background:var(--gold);color:#fff;}
+  .mode{display:none;flex-direction:column;height:100%;}
+  .mode.active{display:flex;}
+
+  .report-cats{display:flex;flex-direction:column;gap:8px;}
+  .report-cat{text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;}
+  .report-cat.active{border-color:var(--gold);background:#FCF3E1;color:#8A5A12;}
+  .report-textarea{width:100%;min-height:90px;border:1px solid var(--border);border-radius:12px;padding:12px;font-size:13px;font-family:inherit;resize:none;}
+  .report-send{background:var(--gold);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;}
+  .report-send:disabled{background:#ECECEC;color:#A39CAA;}
+  .report-done{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:30px 10px;}
+  .report-done .check{width:52px;height:52px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;}
+
+  .scan-box{width:100%;aspect-ratio:1;border:2px dashed var(--border);border-radius:16px;display:flex;align-items:center;justify-content:center;background:#fff;}
+  .scan-result{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;}
+
+  footer{text-align:center;padding:18px;font-size:11px;color:#8A8390;}
+</style>
+</head>
+<body>
+
+<div class="top-switch">
+  <div class="brand">COLOSO <span>COMEDOR · DEMO</span></div>
+  <div class="switch-group">
+    <button data-view="panel" class="active">Panel web</button>
+    <button data-view="app">App móvil</button>
+  </div>
+</div>
+
+<!-- ============= PANEL WEB ============= -->
+<div id="view-panel" class="view active">
+  <div class="panel">
+    <div class="sidebar">
+      <div class="logo"><span class="l1">COLOSO</span><span class="l2">COMEDOR</span></div>
+      <button class="navbtn active" data-section="pedidos">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"></rect><rect x="3" y="10" width="18" height="4" rx="1"></rect><rect x="3" y="16" width="18" height="4" rx="1"></rect></svg>
+        <span>Pedidos</span>
+      </button>
+      <button class="navbtn" data-section="menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v7a2 2 0 0 0 2 2v9"></path><path d="M6 3v5"></path><path d="M9 3v5"></path><path d="M18 3c-2 1-2 4-2 6s0 3 2 3v9"></path></svg>
+        <span>Menú</span>
+      </button>
+      <button class="navbtn" data-section="reportes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="20" x2="5" y2="12"></line><line x1="12" y1="20" x2="12" y2="6"></line><line x1="19" y1="20" x2="19" y2="15"></line></svg>
+        <span>Reportes</span>
+      </button>
+      <button class="navbtn" data-section="usuarios">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><circle cx="18" cy="8" r="2.5"></circle><path d="M16 14.2c2.3.4 4 2.4 4 5.8"></path></svg>
+        <span>Usuarios</span>
+      </button>
+      <button class="navbtn" data-section="asistencia">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
+        <span>Asistencia</span>
+      </button>
+      <button class="navbtn" data-section="mensajes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        <span>Mensajes</span>
+      </button>
+      <div class="shift-card">
+        <div class="tag">TURNO ACTIVO</div>
+        <div class="name">Luis Servicia</div>
+        <div class="hrs">10:00 – 18:00 h</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <div class="title" id="section-title">Pedidos en curso</div>
+          <div class="sub">Auditorio Nacional · miércoles 17 de septiembre de 2026</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="bell-btn" id="bell-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#27232A" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            <span class="bell-count" id="bell-count"></span>
+          </button>
+          <div class="bell-dropdown" id="bell-dropdown">
+            <div class="head">Alertas del turno</div>
+            <div id="alerts-list"></div>
+          </div>
+          <div class="avatar">LS</div>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- PEDIDOS -->
+        <div class="section active" id="sec-pedidos">
+          <div class="kpi-row">
+            <div class="card"><div class="kpi-label">PEDIDOS HOY</div><div class="kpi-value">184</div></div>
+            <div class="card"><div class="kpi-label">EN PREPARACIÓN</div><div class="kpi-value" style="color:var(--blue);">12</div></div>
+            <div class="card"><div class="kpi-label">LISTOS POR RECOGER</div><div class="kpi-value" style="color:var(--gold);">5</div></div>
+            <div class="card"><div class="kpi-label">ENTREGADOS</div><div class="kpi-value" style="color:var(--green);">162</div></div>
+          </div>
+
+          <div class="cols">
+            <div class="table-card">
+              <div class="filters" id="filters"></div>
+              <table>
+                <thead><tr>
+                  <th>FOLIO</th><th>USUARIO</th><th>ÁREA / PROVEEDOR</th><th>PLATILLO</th><th>HORA</th><th>ESTATUS</th>
+                </tr></thead>
+                <tbody id="orders-body"></tbody>
+              </table>
+            </div>
+            <div class="side-col">
+              <div class="card">
+                <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Disponibilidad rápida</div>
+                <div id="quick-menu"></div>
+              </div>
+              <div class="rule-card">
+                <div class="tag">REGLA ACTIVA</div>
+                <p>Un pedido "Listo" y no recogido regresa al menú a las 2 horas. Si nadie lo solicita, el cargo se mantiene en el usuario original.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENU -->
+        <div class="section" id="sec-menu">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:13px;color:var(--ink-soft);">Cargado por el encargado Servicia · actualizado 12:58</div>
+            <button class="btn-dark" style="background:var(--gold);">+ Agregar platillo</button>
+          </div>
+          <div class="menu-grid" id="menu-grid"></div>
+        </div>
+
+        <!-- REPORTES -->
+        <div class="section" id="sec-reportes">
+          <div class="stat3">
+            <div class="card"><div class="kpi-label">CONSUMOS DEL MES</div><div class="kpi-value">3,412</div></div>
+            <div class="card"><div class="kpi-label">IMPORTE ACUMULADO</div><div class="kpi-value" style="font-size:18px;color:var(--ink-soft);">[PENDIENTE DE DEFINIR]</div></div>
+            <div class="card"><div class="kpi-label">NO RECOGIDOS</div><div class="kpi-value" style="color:var(--red);">27</div></div>
+          </div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:14px;">Consumo por área / proveedor</div>
+            <div id="areas-list"></div>
+          </div>
+          <div class="export-row">
+            <button class="btn-dark">Exportar Excel</button>
+            <button class="btn-outline">Exportar CSV</button>
+          </div>
+        </div>
+
+        <!-- USUARIOS -->
+        <div class="section" id="sec-usuarios">
+          <div class="table-card">
+            <table>
+              <thead><tr><th>NOMBRE</th><th>ID</th><th>ÁREA / EMPRESA</th><th>TIPO</th><th>ESTATUS</th></tr></thead>
+              <tbody id="users-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ASISTENCIA -->
+        <div class="section" id="sec-asistencia">
+          <div style="font-size:11px;color:var(--ink-soft);">El registro de entrada y salida se hace desde la app de cada encargado, con validación de foto y ubicación. Aquí solo se consulta al equipo completo.</div>
+          <div class="table-card">
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;">Asistencia de hoy · miércoles 17 de septiembre</div>
+            <table>
+              <thead><tr><th>NOMBRE</th><th>PUESTO</th><th>ENTRADA</th><th>SALIDA</th><th>ESTADO</th></tr></thead>
+              <tbody id="today-attendance-body"></tbody>
+            </table>
+          </div>
+          <div class="table-card">
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;">Histórico de asistencia</div>
+            <table>
+              <thead><tr><th>FECHA</th><th>NOMBRE</th><th>ENTRADA</th><th>SALIDA</th><th>DURACIÓN</th><th>ESTATUS</th></tr></thead>
+              <tbody id="checkin-history"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MENSAJES -->
+        <div class="section" id="sec-mensajes">
+          <div class="compose-card">
+            <div style="font-size:13px;font-weight:700;">Enviar mensaje a los encargados</div>
+            <textarea class="compose-textarea" id="compose-text" placeholder="Escribe el mensaje para el equipo de Servicia en el comedor…"></textarea>
+            <div class="compose-row">
+              <select class="compose-select" id="compose-priority">
+                <option value="normal">Prioridad normal</option>
+                <option value="urgente">Urgente</option>
+              </select>
+              <button class="compose-send" id="compose-send" disabled>Enviar a encargados</button>
+            </div>
+          </div>
+          <div class="table-card" style="max-width:520px;">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;">Mensajes enviados</div>
+            <div id="messages-list-panel"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= APP MOVIL ============= -->
+<div id="view-app" class="view">
+  <div class="app-wrap">
+    <div class="role-switch">
+      <button data-role="comensal" class="active">Comensal</button>
+      <button data-role="encargado">Encargado</button>
+    </div>
+    <div class="phone">
+
+    <!-- ===== MODO COMENSAL ===== -->
+    <div class="mode active" id="mode-comensal">
+    <div class="app-header">
+      <div><div class="eyebrow">COLOSO COMEDOR</div><div class="title" id="app-title">Menú del día</div></div>
+      <div class="bell">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27232A" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+      </div>
+    </div>
+
+    <div class="app-body">
+      <!-- Menu screen -->
+      <div class="app-screen active" id="app-menu">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A8390" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          Buscar platillo
+        </div>
+        <div class="price-note">Precio por comida: <strong>[PENDIENTE DE DEFINIR]</strong> · informado por el Auditorio Nacional</div>
+        <div id="dishes-list"></div>
+      </div>
+
+      <!-- Order screen -->
+      <div class="app-screen" id="app-order">
+        <div class="order-card">
+          <div class="order-top"><span>Folio #0231</span><span class="status">Listo para recoger</span></div>
+          <div class="order-dish">Ensalada César</div>
+          <div class="steps" id="steps-row"></div>
+        </div>
+        <div class="qr-card">
+          <div class="qr-grid" id="qr-grid"></div>
+          <div class="qr-cap">Código de un solo uso · muéstralo al encargado Servicia</div>
+        </div>
+        <div class="rules-dark">
+          <div class="tag">RECOLECCIÓN</div>
+          <p>Disponible hasta las 15:12 h. Si no se recoge, el platillo vuelve al menú y se libera el cargo.</p>
+        </div>
+        <button class="cancel-btn">Cancelar pedido</button>
+      </div>
+
+      <!-- Profile screen -->
+      <div class="app-screen" id="app-profile">
+        <div style="padding:16px 0;text-align:center;">
+          <div class="avatar-big">AR</div>
+          <div style="font-size:16px;font-weight:800;margin-top:10px;">Ana Ramírez</div>
+          <div style="font-size:12px;color:var(--ink-soft);">Producción · Auditorio Nacional</div>
+        </div>
+        <div class="profile-list">
+          <div class="row">Historial de pedidos</div>
+          <div class="row">Notificaciones</div>
+          <div class="row">Ayuda y protocolos</div>
+        </div>
+        <button class="logout-btn">Cerrar sesión</button>
+      </div>
+
+      <!-- Reportar screen -->
+      <div class="app-screen" id="app-reportar">
+        <div id="reportar-form">
+          <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">¿Qué quieres reportar sobre tu pedido #0231?</div>
+          <div class="report-cats" id="report-cats"></div>
+          <textarea class="report-textarea" id="report-text" placeholder="Cuéntanos qué pasó (opcional)" style="margin-top:12px;"></textarea>
+          <button class="report-send" id="report-send" style="margin-top:12px;width:100%;" disabled>Enviar reporte</button>
+        </div>
+        <div id="reportar-done" style="display:none;">
+          <div class="report-done">
+            <div class="check">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2E7D4F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div style="font-size:15px;font-weight:800;">Reporte enviado</div>
+            <div style="font-size:12px;color:var(--ink-soft);">Folio #0231 · Un supervisor de Servicia lo revisará en breve.</div>
+            <button class="btn-outline" id="report-reset" style="margin-top:8px;">Enviar otro reporte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-nav">
+      <button class="navtab" data-tab="menu">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0 1 16 0z"></path><line x1="2" y1="16" x2="22" y2="16"></line></svg>
+        <span>Menú</span>
+      </button>
+      <button class="navtab active" data-tab="order">
+        <div class="dotwrap">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="13" rx="2"></rect><path d="M9 7V5a3 3 0 0 1 6 0v2"></path></svg>
+          <div class="badge-dot"></div>
+        </div>
+        <span>Mi pedido</span>
+      </button>
+      <button class="navtab" data-tab="reportar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 2.5 17.5a1.5 1.5 0 0 0 1.3 2.5h16.4a1.5 1.5 0 0 0 1.3-2.5L13.7 3.9a1.5 1.5 0 0 0-2.6 0z"></path></svg>
+        <span>Reportar</span>
+      </button>
+      <button class="navtab" data-tab="profile">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg>
+        <span>Perfil</span>
+      </button>
+    </div>
+    </div>
+    <!-- ===== fin modo comensal ===== -->
+
+    <!-- ===== MODO ENCARGADO ===== -->
+    <div class="mode" id="mode-encargado">
+      <div class="app-header">
+        <div><div class="eyebrow">COLOSO COMEDOR</div><div class="title" id="enc-title">Mi turno</div></div>
+        <div class="bell" style="background:var(--gold);">
+          <span style="color:#fff;font-size:12px;font-weight:800;">LS</span>
+        </div>
+      </div>
+
+      <div class="app-body">
+        <!-- Turno screen -->
+        <div class="app-screen active" id="enc-turno">
+          <div class="order-card" style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;">
+            <div style="font-size:14px;font-weight:800;">Luis Servicia · Encargado</div>
+            <div class="checkin-photo" id="checkin-photo">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8A8390" stroke-width="1.6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </div>
+            <div class="checkin-status" id="app-checkin-status" style="font-size:12px;">Sin registrar entrada hoy</div>
+            <div class="checkin-location" id="app-checkin-location"></div>
+            <button class="checkin-btn" id="app-checkin-btn" style="width:100%;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:6px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              Tomar foto y registrar entrada
+            </button>
+          </div>
+          <div class="rules-dark" style="margin-top:14px;">
+            <div class="tag">TURNO</div>
+            <p>Lunes a sábado · 10:00–18:00 h · 45 min de descanso en horario de bajo flujo.</p>
+          </div>
+        </div>
+
+        <!-- Validar screen -->
+        <div class="app-screen" id="enc-validar">
+          <div id="validar-idle">
+            <div class="scan-box">
+              <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#8A8390" stroke-width="1.6"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><line x1="7" y1="12" x2="17" y2="12"></line></svg>
+            </div>
+            <button class="checkin-btn" id="scan-btn" style="width:100%;margin-top:14px;">Escanear código QR</button>
+          </div>
+          <div id="validar-result" style="display:none;">
+            <div class="scan-result">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:var(--ink-soft);">Folio #0231</span>
+                <span class="badge" style="background:var(--green-bg);color:var(--green);">Validado ✓</span>
+              </div>
+              <div style="font-size:16px;font-weight:800;">Ensalada César</div>
+              <div style="font-size:12px;color:var(--ink-soft);">Ana Ramírez · Producción</div>
+            </div>
+            <button class="btn-outline" id="scan-reset" style="width:100%;margin-top:12px;">Escanear otro código</button>
+          </div>
+        </div>
+
+        <!-- Alertas screen -->
+        <div class="app-screen" id="enc-alertas">
+          <div id="app-alerts-list"></div>
+        </div>
+
+        <!-- Mensajes screen -->
+        <div class="app-screen" id="enc-mensajes">
+          <div id="messages-list-app"></div>
+        </div>
+      </div>
+
+      <div class="app-nav">
+        <button class="navtab active" data-enctab="turno">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
+          <span>Mi turno</span>
+        </button>
+        <button class="navtab" data-enctab="validar">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><line x1="7" y1="12" x2="17" y2="12"></line></svg>
+          <span>Validar</span>
+        </button>
+        <button class="navtab" data-enctab="alertas">
+          <div class="dotwrap">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            <span class="badge-num" id="app-bell-count"></span>
+          </div>
+          <span>Alertas</span>
+        </button>
+        <button class="navtab" data-enctab="mensajes">
+          <div class="dotwrap">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <span class="badge-num" id="app-msg-count"></span>
+          </div>
+          <span>Mensajes</span>
+        </button>
+      </div>
+    </div>
+    <!-- ===== fin modo encargado ===== -->
+
+    </div>
+  </div>
+</div>
+
+<footer>Demo con datos de ejemplo · Coloso Comedor — Auditorio Nacional</footer>
+
+<script>
+  // ---------- top switch ----------
+  document.querySelectorAll('.switch-group button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.switch-group button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    });
+  });
+
+  // ---------- PANEL: section nav ----------
+  const sectionTitles = {
+    pedidos: 'Pedidos en curso',
+    menu: 'Menú del día',
+    reportes: 'Reportes y conciliación',
+    usuarios: 'Padrón de usuarios',
+    asistencia: 'Asistencia y turno',
+    mensajes: 'Mensajes a encargados',
+  };
+  document.querySelectorAll('.sidebar .navbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar .navbtn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.content .section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-' + btn.dataset.section).classList.add('active');
+      document.getElementById('section-title').textContent = sectionTitles[btn.dataset.section];
+    });
+  });
+
+  // ---------- PANEL: orders table + filters ----------
+  const STATUS = {
+    solicitado:  { label: 'Solicitado',     bg: '#ECECEC', fg: '#54505A' },
+    preparacion: { label: 'En preparación', bg: '#E4EEF9', fg: '#2B5F94' },
+    listo:       { label: 'Listo',          bg: '#FCEFD9', fg: '#8A5A12' },
+    entregado:   { label: 'Entregado',      bg: '#E5F3EA', fg: '#2E7D4F' },
+    no_recogido: { label: 'No recogido',    bg: '#FCECEC', fg: '#B84040' },
+  };
+  const ALL_ORDERS = [
+    { folio: '#0231', usuario: 'Ana Ramírez',   area: 'Producción',       platillo: 'Ensalada César',      hora: '13:12', statusKey: 'listo' },
+    { folio: '#0230', usuario: 'Luis Torres',   area: 'Prov. Staging MX', platillo: 'Milanesa empanizada', hora: '13:10', statusKey: 'preparacion' },
+    { folio: '#0229', usuario: 'Carla Méndez',  area: 'Taquilla',         platillo: 'Sopa de tortilla',    hora: '13:05', statusKey: 'entregado' },
+    { folio: '#0228', usuario: 'Jorge Paredes', area: 'Producción',       platillo: 'Pasta alfredo',       hora: '13:14', statusKey: 'solicitado' },
+    { folio: '#0227', usuario: 'Rosa Jiménez',  area: 'Limpieza',         platillo: 'Ensalada César',      hora: '12:40', statusKey: 'no_recogido' },
+    { folio: '#0226', usuario: 'Pedro Salinas', area: 'Seguridad',        platillo: 'Milanesa empanizada', hora: '12:35', statusKey: 'entregado' },
+    { folio: '#0225', usuario: 'María Duarte',  area: 'Prov. Staging MX', platillo: 'Sopa de tortilla',    hora: '12:30', statusKey: 'entregado' },
+  ];
+  const FILTER_DEFS = [
+    { key: 'todos', label: 'Todos' },
+    { key: 'solicitado', label: 'Solicitado' },
+    { key: 'preparacion', label: 'En preparación' },
+    { key: 'listo', label: 'Listo' },
+    { key: 'entregado', label: 'Entregado' },
+    { key: 'no_recogido', label: 'No recogido' },
+  ];
+  let currentFilter = 'todos';
+
+  function renderFilters() {
+    const wrap = document.getElementById('filters');
+    wrap.innerHTML = '';
+    FILTER_DEFS.forEach(f => {
+      const b = document.createElement('button');
+      b.className = 'filter-btn' + (f.key === currentFilter ? ' active' : '');
+      b.textContent = f.label;
+      b.addEventListener('click', () => { currentFilter = f.key; renderFilters(); renderOrders(); });
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderOrders() {
+    const body = document.getElementById('orders-body');
+    body.innerHTML = '';
+    const list = currentFilter === 'todos' ? ALL_ORDERS : ALL_ORDERS.filter(o => o.statusKey === currentFilter);
+    list.forEach(o => {
+      const s = STATUS[o.statusKey];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="font-weight:700;">${o.folio}</td><td>${o.usuario}</td>
+        <td style="color:var(--ink-soft);">${o.area}</td><td>${o.platillo}</td>
+        <td style="color:var(--ink-soft);">${o.hora}</td>
+        <td><span class="badge" style="background:${s.bg};color:${s.fg};">${s.label}</span></td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  const QUICK_MENU = [
+    { nombre: 'Ensalada César', disponibles: 18, warn: false },
+    { nombre: 'Milanesa empanizada', disponibles: 9, warn: false },
+    { nombre: 'Pasta alfredo', disponibles: 0, warn: true },
+    { nombre: 'Sopa de tortilla', disponibles: 25, warn: false },
+  ];
+  function renderQuickMenu() {
+    const wrap = document.getElementById('quick-menu');
+    wrap.innerHTML = '';
+    QUICK_MENU.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'quick-row';
+      row.innerHTML = `<span>${m.nombre}</span><span style="font-weight:800;color:${m.warn ? 'var(--red)' : 'var(--ink)'};">${m.disponibles}</span>`;
+      wrap.appendChild(row);
+    });
+  }
+
+  // ---------- PANEL: menu section ----------
+  const MENU_ITEMS = [
+    { nombre: 'Ensalada César', categoria: 'Entrada', disponibles: 18, total: 30 },
+    { nombre: 'Milanesa empanizada', categoria: 'Plato fuerte', disponibles: 9, total: 40 },
+    { nombre: 'Pasta alfredo', categoria: 'Plato fuerte', disponibles: 0, total: 25 },
+    { nombre: 'Sopa de tortilla', categoria: 'Entrada', disponibles: 25, total: 30 },
+  ];
+  function renderMenuGrid() {
+    const wrap = document.getElementById('menu-grid');
+    wrap.innerHTML = '';
+    MENU_ITEMS.forEach(d => {
+      const agotado = d.disponibles === 0;
+      const pct = Math.round((d.disponibles / d.total) * 100);
+      const card = document.createElement('div');
+      card.className = 'dish-card';
+      card.innerHTML = `
+        <div class="dish-top">
+          <div><div class="dish-name">${d.nombre}</div><div class="dish-cat">${d.categoria}</div></div>
+          <span class="tag-pill" style="background:${agotado ? '#FCECEC' : '#E5F3EA'};color:${agotado ? '#B84040' : '#2E7D4F'};">${agotado ? 'Agotado' : 'Disponible'}</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
+          <span style="font-size:12px;color:var(--ink-soft);white-space:nowrap;">${d.disponibles}/${d.total}</span>
+        </div>`;
+      wrap.appendChild(card);
+    });
+  }
+
+  // ---------- PANEL: reportes ----------
+  const REPORT_AREAS = [
+    { nombre: 'Producción', pedidos: 92 },
+    { nombre: 'Taquilla', pedidos: 61 },
+    { nombre: 'Proveedor: Staging MX', pedidos: 48 },
+    { nombre: 'Seguridad', pedidos: 33 },
+    { nombre: 'Limpieza', pedidos: 19 },
+  ];
+  function renderAreas() {
+    const wrap = document.getElementById('areas-list');
+    wrap.innerHTML = '';
+    const max = Math.max(...REPORT_AREAS.map(r => r.pedidos));
+    REPORT_AREAS.forEach(r => {
+      const pct = Math.round((r.pedidos / max) * 100);
+      const row = document.createElement('div');
+      row.className = 'area-row';
+      row.innerHTML = `<div class="area-top"><span>${r.nombre}</span><span style="color:var(--ink-soft);">${r.pedidos} pedidos</span></div>
+        <div class="bar-track" style="height:9px;"><div class="bar-fill" style="width:${pct}%;"></div></div>`;
+      wrap.appendChild(row);
+    });
+  }
+
+  // ---------- PANEL: usuarios ----------
+  const USERS = [
+    { nombre: 'Ana Ramírez', id: 'EMP014', area: 'Producción', tipo: 'Personal AN', activo: true },
+    { nombre: 'Luis Torres', id: 'PRV002', area: 'Staging MX', tipo: 'Proveedor autorizado', activo: true },
+    { nombre: 'Carla Méndez', id: 'EMP031', area: 'Taquilla', tipo: 'Personal AN', activo: true },
+    { nombre: 'Rosa Jiménez', id: 'EMP008', area: 'Limpieza', tipo: 'Personal AN', activo: false },
+    { nombre: 'Pedro Salinas', id: 'EMP019', area: 'Seguridad', tipo: 'Personal AN', activo: true },
+  ];
+  function renderUsers() {
+    const body = document.getElementById('users-body');
+    body.innerHTML = '';
+    USERS.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="font-weight:600;">${u.nombre}</td><td style="color:var(--ink-soft);">${u.id}</td>
+        <td>${u.area}</td><td>${u.tipo}</td>
+        <td><span class="badge" style="background:${u.activo ? '#E5F3EA' : '#ECECEC'};color:${u.activo ? '#2E7D4F' : '#54505A'};">${u.activo ? 'Activo' : 'Inactivo'}</span></td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  renderFilters(); renderOrders(); renderQuickMenu(); renderMenuGrid(); renderAreas(); renderUsers();
+
+  // ---------- PANEL: alertas ----------
+  const ALERT_CATS = {
+    pedido:      { label: 'Nuevo pedido', bg: '#E1F5F0', fg: '#1E7A63' },
+    insumos:     { label: 'Insumos',     bg: '#FCEFD9', fg: '#8A5A12' },
+    lectura_qr:  { label: 'Lectura QR',  bg: '#E4EEF9', fg: '#2B5F94' },
+    recoleccion: { label: 'Recolección', bg: '#FCECEC', fg: '#B84040' },
+    fila:        { label: 'Fila',        bg: '#ECECEC', fg: '#54505A' },
+    reclamo:     { label: 'Reclamo',     bg: '#FCECEC', fg: '#B84040' },
+  };
+  let ALERTS = [
+    { id: 1, cat: 'insumos', msg: 'Milanesa empanizada por agotarse (9 restantes).', time: '13:16', resolved: false },
+    { id: 2, cat: 'lectura_qr', msg: 'Falla al validar QR del folio #0224. Reintentar o marcar entrega manual.', time: '13:09', resolved: false },
+    { id: 3, cat: 'recoleccion', msg: 'Pedido #0227 sin recoger hace 1 h 50 min. Está por vencer.', time: '12:58', resolved: false },
+    { id: 4, cat: 'fila', msg: 'Fila prolongada en la ventanilla de entrega.', time: '12:40', resolved: true },
+    { id: 5, cat: 'reclamo', msg: 'Usuario reporta pedido incompleto — folio #0221.', time: '12:15', resolved: true },
+  ];
+
+  function renderAlertsInto(listId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '';
+    const sorted = [...ALERTS].sort((a, b) => (a.resolved === b.resolved) ? 0 : (a.resolved ? 1 : -1));
+    sorted.forEach(a => {
+      const c = ALERT_CATS[a.cat];
+      const item = document.createElement('div');
+      item.className = 'alert-item' + (a.resolved ? ' resolved' : '');
+      item.innerHTML = `
+        <div class="alert-top">
+          <span class="alert-cat" style="background:${c.bg};color:${c.fg};">${c.label}</span>
+          <span class="alert-time">${a.time}</span>
+        </div>
+        <div class="alert-msg">${a.msg}</div>
+        ${a.resolved ? '<span style="font-size:11px;color:var(--green);font-weight:700;">Resuelta</span>' : `<button class="alert-resolve" data-id="${a.id}">Marcar resuelta</button>`}
+      `;
+      list.appendChild(item);
+    });
+    list.querySelectorAll('.alert-resolve').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        ALERTS = ALERTS.map(a => a.id === id ? { ...a, resolved: true } : a);
+        renderAlerts();
+      });
+    });
+  }
+  function renderAlerts() {
+    renderAlertsInto('alerts-list');
+    renderAlertsInto('app-alerts-list');
+    const pending = ALERTS.filter(a => !a.resolved).length;
+    const bellCount = document.getElementById('bell-count');
+    bellCount.textContent = pending;
+    bellCount.style.display = pending > 0 ? 'flex' : 'none';
+    const appBellCount = document.getElementById('app-bell-count');
+    appBellCount.textContent = pending;
+    appBellCount.style.display = pending > 0 ? 'flex' : 'none';
+  }
+  renderAlerts();
+
+  document.getElementById('bell-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('bell-dropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('bell-dropdown');
+    if (dd.classList.contains('open') && !dd.contains(e.target)) dd.classList.remove('open');
+  });
+
+  // ---------- PANEL: asistencia / check-in ----------
+  let checkinState = 'none'; // none | in | out
+  let checkinInTime = '';
+  const STAFF_TODAY = [
+    { name: 'Luis Servicia', puesto: 'Encargado · turno matutino', live: true },
+    { name: 'Diana Cruz', puesto: 'Encargada · turno vespertino', entrada: '13:58', salida: '—', estado: 'En turno' },
+    { name: 'Miguel Ángel Ruiz', puesto: 'Supervisor Servicia', entrada: '09:45', salida: '18:10', estado: 'Completo' },
+    { name: 'Fernanda López', puesto: 'Encargada suplente', entrada: '—', salida: '—', estado: 'Sin registrar' },
+  ];
+  const ATTENDANCE_COLORS = {
+    'Completo':      ['#E5F3EA', '#2E7D4F'],
+    'En turno':      ['#FCEFD9', '#8A5A12'],
+    'Sin registrar': ['#ECECEC', '#54505A'],
+    'Retardo':       ['#FCECEC', '#B84040'],
+  };
+  function renderTodayAttendance() {
+    const body = document.getElementById('today-attendance-body');
+    if (!body) return;
+    body.innerHTML = '';
+    STAFF_TODAY.forEach(s => {
+      let row = s;
+      if (s.live) {
+        let entrada = '—', salida = '—', estado = 'Sin registrar';
+        if (checkinState === 'in') { entrada = checkinInTime; estado = 'En turno'; }
+        else if (checkinState === 'out') { entrada = checkinInTime; salida = nowHHMM(); estado = 'Completo'; }
+        row = { name: s.name, puesto: s.puesto, entrada, salida, estado };
+      }
+      const [bg, fg] = ATTENDANCE_COLORS[row.estado] || ATTENDANCE_COLORS['Sin registrar'];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="font-weight:600;">${row.name}</td><td style="color:var(--ink-soft);">${row.puesto}</td>
+        <td>${row.entrada}</td><td>${row.salida}</td>
+        <td><span class="badge" style="background:${bg};color:${fg};">${row.estado}</span></td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  const CHECKIN_HISTORY = [
+    { fecha: '16 sep 2026', nombre: 'Luis Servicia', entrada: '09:58', salida: '18:04', duracion: '8 h 06 min', estado: 'Completo' },
+    { fecha: '16 sep 2026', nombre: 'Diana Cruz', entrada: '13:55', salida: '20:02', duracion: '6 h 07 min', estado: 'Completo' },
+    { fecha: '16 sep 2026', nombre: 'Miguel Ángel Ruiz', entrada: '09:40', salida: '18:05', duracion: '8 h 25 min', estado: 'Completo' },
+    { fecha: '15 sep 2026', nombre: 'Luis Servicia', entrada: '10:02', salida: '18:00', duracion: '7 h 58 min', estado: 'Completo' },
+    { fecha: '15 sep 2026', nombre: 'Fernanda López', entrada: '10:20', salida: '17:50', duracion: '7 h 30 min', estado: 'Retardo' },
+    { fecha: '13 sep 2026', nombre: 'Luis Servicia', entrada: '10:11', salida: '17:55', duracion: '7 h 44 min', estado: 'Retardo' },
+    { fecha: '13 sep 2026', nombre: 'Diana Cruz', entrada: '13:50', salida: '20:00', duracion: '6 h 10 min', estado: 'Completo' },
+  ];
+  function renderCheckinHistory() {
+    const body = document.getElementById('checkin-history');
+    body.innerHTML = '';
+    CHECKIN_HISTORY.forEach(h => {
+      const [bg, fg] = ATTENDANCE_COLORS[h.estado] || ATTENDANCE_COLORS['Sin registrar'];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${h.fecha}</td><td style="font-weight:600;">${h.nombre}</td><td>${h.entrada}</td><td>${h.salida}</td><td style="color:var(--ink-soft);">${h.duracion}</td>
+        <td><span class="badge" style="background:${bg};color:${fg};">${h.estado}</span></td>`;
+      body.appendChild(tr);
+    });
+  }
+  function nowHHMM() {
+    const d = new Date();
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  const CAMERA_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:6px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>';
+  const PIN_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:4px;"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+
+  function setCheckinPhoto(captured) {
+    const photo = document.getElementById('checkin-photo');
+    if (!photo) return;
+    photo.className = 'checkin-photo' + (captured ? ' captured' : '');
+    const strokeColor = captured ? '#fff' : '#8A8390';
+    photo.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`;
+  }
+
+  function renderCheckin() {
+    let statusHtml = 'Sin registrar entrada hoy';
+    let locationHtml = '';
+    let locationOk = false;
+
+    if (checkinState === 'verifying') {
+      statusHtml = 'Verificando rostro y ubicación…';
+    } else if (checkinState === 'in') {
+      statusHtml = `<span class="checkin-ok">Entrada registrada ${checkinInTime}</span>`;
+      locationHtml = PIN_ICON + 'Auditorio Nacional · GPS validado (±14 m)';
+      locationOk = true;
+      setCheckinPhoto(true);
+    } else if (checkinState === 'out') {
+      statusHtml = `<span class="checkin-ok">Turno finalizado ${nowHHMM()} · Duración registrada: 7 h 50 min</span>`;
+      locationHtml = PIN_ICON + 'Salida registrada en Auditorio Nacional';
+      locationOk = true;
+    } else {
+      setCheckinPhoto(false);
+    }
+
+    document.getElementById('app-checkin-status').innerHTML = statusHtml;
+    const locEl = document.getElementById('app-checkin-location');
+    locEl.innerHTML = locationHtml;
+    locEl.className = 'checkin-location' + (locationOk ? ' ok' : '');
+
+    const appBtn = document.getElementById('app-checkin-btn');
+    appBtn.disabled = false;
+    if (checkinState === 'verifying') {
+      appBtn.textContent = 'Verificando…';
+      appBtn.className = 'checkin-btn';
+      appBtn.disabled = true;
+    } else if (checkinState === 'in') {
+      appBtn.textContent = 'Registrar salida';
+      appBtn.className = 'checkin-btn out';
+    } else if (checkinState === 'out') {
+      appBtn.textContent = 'Turno cerrado';
+      appBtn.className = 'checkin-btn out';
+      appBtn.disabled = true;
+    } else {
+      appBtn.innerHTML = CAMERA_ICON + 'Tomar foto y registrar entrada';
+      appBtn.className = 'checkin-btn';
+    }
+
+    renderTodayAttendance();
+  }
+  renderCheckinHistory(); renderCheckin();
+
+  // ---------- PANEL: mensajes a encargados ----------
+  let MESSAGES = [
+    { id: 1, text: 'Recuerden reforzar el conteo de insumos antes de las 14:00.', priority: 'normal', time: '11:30', read: true },
+    { id: 2, text: 'Favor de reportar cualquier retraso en entregas de inmediato.', priority: 'urgente', time: '12:50', read: false },
+  ];
+  function renderMessagesInto(listId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '';
+    MESSAGES.forEach(m => {
+      const urgente = m.priority === 'urgente';
+      const item = document.createElement('div');
+      item.className = 'msg-item';
+      item.innerHTML = `
+        <div class="msg-top">
+          <span class="msg-priority" style="background:${urgente ? '#FCECEC' : '#ECECEC'};color:${urgente ? '#B84040' : '#54505A'};">${urgente ? 'Urgente' : 'Normal'}</span>
+          <span class="msg-time">${m.time}</span>
+        </div>
+        <div class="msg-text">${m.text}</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+  function renderMessages() {
+    renderMessagesInto('messages-list-panel');
+    renderMessagesInto('messages-list-app');
+    updateMsgBadge();
+  }
+  function updateMsgBadge() {
+    const unread = MESSAGES.filter(m => !m.read).length;
+    const el = document.getElementById('app-msg-count');
+    el.textContent = unread;
+    el.style.display = unread > 0 ? 'flex' : 'none';
+  }
+  function markMessagesRead() {
+    MESSAGES = MESSAGES.map(m => ({ ...m, read: true }));
+    updateMsgBadge();
+  }
+  renderMessages();
+
+  document.getElementById('compose-text').addEventListener('input', (e) => {
+    document.getElementById('compose-send').disabled = e.target.value.trim().length === 0;
+  });
+  document.getElementById('compose-send').addEventListener('click', () => {
+    const text = document.getElementById('compose-text').value.trim();
+    if (!text) return;
+    const priority = document.getElementById('compose-priority').value;
+    const nextId = Math.max(0, ...MESSAGES.map(m => m.id)) + 1;
+    MESSAGES = [{ id: nextId, text, priority, time: nowHHMM(), read: false }, ...MESSAGES];
+    document.getElementById('compose-text').value = '';
+    document.getElementById('compose-send').disabled = true;
+    renderMessages();
+  });
+
+  // ---------- APP: rol comensal / encargado ----------
+  document.querySelectorAll('.role-switch button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.role-switch button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.phone > .mode').forEach(m => m.classList.remove('active'));
+      document.getElementById('mode-' + btn.dataset.role).classList.add('active');
+    });
+  });
+
+  // ---------- APP: tabs (comensal) ----------
+  const appTitles = { menu: 'Menú del día', order: 'Mi pedido', reportar: 'Reportar', profile: 'Mi perfil' };
+  document.querySelectorAll('#mode-comensal .app-nav .navtab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#mode-comensal .app-nav .navtab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#mode-comensal .app-screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('app-' + btn.dataset.tab).classList.add('active');
+      document.getElementById('app-title').textContent = appTitles[btn.dataset.tab];
+    });
+  });
+
+  // ---------- APP: tabs (encargado) ----------
+  const encTitles = { turno: 'Mi turno', validar: 'Validar entrega', alertas: 'Alertas', mensajes: 'Mensajes' };
+  document.querySelectorAll('#mode-encargado .app-nav .navtab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#mode-encargado .app-nav .navtab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#mode-encargado .app-screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('enc-' + btn.dataset.enctab).classList.add('active');
+      document.getElementById('enc-title').textContent = encTitles[btn.dataset.enctab];
+      if (btn.dataset.enctab === 'mensajes') { markMessagesRead(); }
+    });
+  });
+
+  // ---------- APP: reportar (comensal) ----------
+  const REPORT_CATEGORIES = ['Pedido incorrecto o incompleto', 'Demora en la entrega', 'Trato del personal', 'Falla al escanear mi QR', 'Otro'];
+  let reportSelected = null;
+  function renderReportCats() {
+    const wrap = document.getElementById('report-cats');
+    wrap.innerHTML = '';
+    REPORT_CATEGORIES.forEach(cat => {
+      const b = document.createElement('button');
+      b.className = 'report-cat' + (reportSelected === cat ? ' active' : '');
+      b.textContent = cat;
+      b.addEventListener('click', () => { reportSelected = cat; renderReportCats(); updateReportSend(); });
+      wrap.appendChild(b);
+    });
+  }
+  function updateReportSend() {
+    document.getElementById('report-send').disabled = !reportSelected;
+  }
+  renderReportCats(); updateReportSend();
+  document.getElementById('report-send').addEventListener('click', () => {
+    document.getElementById('reportar-form').style.display = 'none';
+    document.getElementById('reportar-done').style.display = 'block';
+  });
+  document.getElementById('report-reset').addEventListener('click', () => {
+    reportSelected = null;
+    document.getElementById('report-text').value = '';
+    renderReportCats(); updateReportSend();
+    document.getElementById('reportar-done').style.display = 'none';
+    document.getElementById('reportar-form').style.display = 'block';
+  });
+
+  // ---------- APP: validar entrega (encargado) ----------
+  document.getElementById('scan-btn').addEventListener('click', () => {
+    document.getElementById('validar-idle').style.display = 'none';
+    document.getElementById('validar-result').style.display = 'block';
+  });
+  document.getElementById('scan-reset').addEventListener('click', () => {
+    document.getElementById('validar-result').style.display = 'none';
+    document.getElementById('validar-idle').style.display = 'block';
+  });
+
+  // ---------- APP: check-in (encargado, sincronizado con el panel) ----------
+  document.getElementById('app-checkin-btn').addEventListener('click', () => {
+    if (checkinState === 'none') {
+      checkinState = 'verifying';
+      renderCheckin();
+      setTimeout(() => {
+        checkinState = 'in';
+        checkinInTime = nowHHMM();
+        renderCheckin();
+      }, 900);
+    } else if (checkinState === 'in') {
+      checkinState = 'out';
+      renderCheckin();
+    }
+  });
+
+  // ---------- APP: dishes ----------
+  const DISHES = [
+    { nombre: 'Ensalada César', desc: 'Disponible · Entrada', disponibles: 18 },
+    { nombre: 'Milanesa empanizada', desc: 'Disponible · Plato fuerte', disponibles: 9 },
+    { nombre: 'Pasta alfredo', desc: 'Agotado por hoy', disponibles: 0 },
+    { nombre: 'Sopa de tortilla', desc: 'Disponible · Entrada', disponibles: 25 },
+  ];
+  function renderDishes() {
+    const wrap = document.getElementById('dishes-list');
+    wrap.innerHTML = '';
+    DISHES.forEach(d => {
+      const agotado = d.disponibles === 0;
+      const card = document.createElement('div');
+      card.className = 'app-dish';
+      card.style.marginBottom = '10px';
+      card.innerHTML = `
+        <div class="icon-box" style="background:${agotado ? '#C9C2CE' : '#D99A2B'};">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12a8 8 0 0 1 16 0z"></path><line x1="2" y1="16" x2="22" y2="16"></line><path d="M6 16c0 2.5 2 4 6 4s6-1.5 6-4"></path></svg>
+        </div>
+        <div class="info">
+          <div class="row-top"><span class="name">${d.nombre}</span>
+            <span class="tag-pill" style="background:${agotado ? '#FCECEC' : '#E5F3EA'};color:${agotado ? '#B84040' : '#2E7D4F'};">${agotado ? 'Agotado' : 'Disponible'}</span>
+          </div>
+          <div class="desc">${d.desc}</div>
+          <button class="order-btn" data-dish="${d.nombre}" ${agotado ? 'disabled' : ''} style="background:${agotado ? '#ECECEC' : '#D99A2B'};color:${agotado ? '#8A8390' : '#fff'};">${agotado ? 'No disponible' : 'Pedir'}</button>
+        </div>`;
+      wrap.appendChild(card);
+    });
+    wrap.querySelectorAll('.order-btn:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => {
+        notifyNewOrder(btn.dataset.dish);
+        const original = btn.textContent;
+        btn.textContent = 'Pedido enviado ✓';
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1800);
+      });
+    });
+  }
+  function notifyNewOrder(dishName) {
+    const nextId = Math.max(0, ...ALERTS.map(a => a.id)) + 1;
+    ALERTS = [{ id: nextId, cat: 'pedido', msg: `Nuevo pedido: ${dishName} — Ana Ramírez (Producción).`, time: nowHHMM(), resolved: false }, ...ALERTS];
+    renderAlerts();
+  }
+  renderDishes();
+
+  // ---------- APP: order steps ----------
+  function renderSteps() {
+    const labels = ['Solicitado', 'En preparación', 'Listo', 'Entregado'];
+    const currentIndex = 2;
+    const wrap = document.getElementById('steps-row');
+    wrap.innerHTML = '';
+    labels.forEach((label, i) => {
+      const done = i < currentIndex, active = i === currentIndex;
+      const dotColor = done || active ? '#D99A2B' : '#E6DED2';
+      const lineBefore = i === 0 ? 'transparent' : (i <= currentIndex ? '#D99A2B' : '#E6DED2');
+      const lineAfter = i === labels.length - 1 ? 'transparent' : (i < currentIndex ? '#D99A2B' : '#E6DED2');
+      const step = document.createElement('div');
+      step.className = 'step';
+      step.innerHTML = `
+        <div class="step-line-row">
+          <div class="step-line" style="background:${lineBefore};"></div>
+          <div class="step-dot" style="background:${dotColor};"></div>
+          <div class="step-line" style="background:${lineAfter};"></div>
+        </div>
+        <div class="step-label" style="font-weight:${active ? '800' : '500'};color:${active ? 'var(--ink)' : '#8A8390'};">${label}</div>`;
+      wrap.appendChild(step);
+    });
+  }
+  renderSteps();
+
+  // ---------- APP: QR pattern ----------
+  function renderQr() {
+    const SIZE = 12;
+    const finders = [{ r: 0, c: 0 }, { r: 0, c: SIZE - 5 }, { r: SIZE - 5, c: 0 }];
+    const wrap = document.getElementById('qr-grid');
+    wrap.innerHTML = '';
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        let filled = null;
+        for (const f of finders) {
+          if (r >= f.r && r < f.r + 5 && c >= f.c && c < f.c + 5) {
+            const rr = r - f.r, cc = c - f.c;
+            filled = rr === 0 || rr === 4 || cc === 0 || cc === 4 || (rr === 2 && cc === 2);
+          }
+        }
+        if (filled === null) filled = (r * 7 + c * 13 + r * c) % 5 === 0;
+        const cell = document.createElement('div');
+        cell.style.width = '11px'; cell.style.height = '11px';
+        cell.style.background = filled ? '#171219' : 'transparent';
+        wrap.appendChild(cell);
+      }
+    }
+  }
+  renderQr();
+</script>
+</body>
+</html>
